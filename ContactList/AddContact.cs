@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ContactList
 {
-    public abstract class AddContact
+    public abstract class AddContact 
     {
        
         public virtual string ToCsv()
@@ -30,5 +30,5 @@ namespace ContactList
         }
 
     }
-   
+
 }

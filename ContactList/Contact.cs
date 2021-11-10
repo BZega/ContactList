@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ContactList
 {
-    public class Contact : AddContact
+    public class Contact : AddContact 
     {
         public Contact (string firstName, string lastName, string birthday, string email, string phone)
         {
