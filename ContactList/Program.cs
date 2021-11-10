@@ -91,9 +91,7 @@ namespace ContactList
                     bool validPhone = false;
                     while (validPhone == false)
                     {
-                        if (Regex.IsMatch(phone, @"^(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]
-                                                    |[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]
-                                                    \s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?$"))
+                        if (Regex.IsMatch(phone, @"\(?\d{3}\)?-? *\d{3}-? *-?\d{4}"))
                             validPhone = true;
                         else
                         {
@@ -107,9 +105,11 @@ namespace ContactList
                     string contactCsv = new Contact(name, lName, bday, email, phone).ToCsv();
                     using var writer = new StreamWriter(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv", true);
                     using var csvWriter = new CsvWriter(writer, CultureInfo.CurrentCulture);
+                    if (!string.IsNullOrWhiteSpace(contactCsv))
+                        csvWriter.NextRecord();                                   
                     csvWriter.WriteField(contactCsv);
-                    csvWriter.NextRecord();
                     writer.Flush();
+                    
                 }
                 else if (userInput == "2" || userInput == "Look up a contact")
                 {
@@ -119,39 +119,31 @@ namespace ContactList
                     {
                         HasHeaderRecord = false,
                     };
-                    StreamReader reader = new(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv", true);
-                    CsvReader csvReader = new(reader, config);
-                    IEnumerable<Contact> record = csvReader.GetRecords<Contact>();
+                    using var reader = new StreamReader(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv");
+                    using var csvReader = new CsvReader(reader, config);
+                    var record = csvReader.GetRecords<Contact>();
                     foreach (Contact items in record)
-                    {
-                        Contact c = new(items.FirstName, items.LastName, items.Birthday, items.Email, items.Phone)
+                    {                        
+                        Contact c = new Contact(items.FirstName, items.LastName, items.Birthday, items.Email, items.Phone);
+                        c.FirstName = items.FirstName;
+                        c.LastName = items.LastName;
+                        c.Birthday = items.Birthday;
+                        c.Email = items.Email;
+                        c.Phone = items.Phone;
+                        var line = string.Format($"{items.FirstName} {items.LastName}, {items.Birthday}, Age: {Contact.CalculateAge(Convert.ToDateTime(items.Birthday))}, {items.Email}, {items.Phone}");
+                        bool success = line.Any(contacts => contactInfo.Contains(items.FirstName) || contactInfo.Contains(items.LastName)
+                                        || contactInfo.Contains(items.Birthday) || contactInfo.Contains(items.Email) || contactInfo.Contains(items.Phone));
+
+                        if (success)
+                            Console.WriteLine(line);
+                        else
                         {
-                            FirstName = items.FirstName,
-                            LastName = items.LastName,
-                            Birthday = items.Birthday,
-                            Email = items.Email,
-                            Phone = items.Phone
-                        };
+                            Console.WriteLine("There doesn't appear to be any more matches.");
+                            break;
+                        }
                     }
 
-
-
-
-                    Console.WriteLine(record);
-
-
-                    bool success = record.Any(contacts => contactInfo.Contains(contacts.FirstName) || contactInfo.Contains(contacts.LastName)
-                    || contactInfo.Contains(contacts.Birthday) || contactInfo.Contains(contacts.Email) || contactInfo.Contains(contacts.Phone));
-                    if (success)
-                        Console.WriteLine(record);
-                    else
-                    {
-                        Console.WriteLine("Sorry it appears this person isn't in your contacts. Please try again.");
-                        break;
-                    }
                 }
-            
-            
                 else if (userInput == "3" || userInput == "quit")
                 {
                     break;
@@ -167,11 +159,6 @@ namespace ContactList
 
             Console.WriteLine("Thank you! You can close the application with any key.");
             Console.ReadKey();
-
-
-            //var p = new Contact($"Taylor", "Hudnutt", "07/09/1989", "taylor_hudnutt@yahoo.com", "502-445-9424");
-            //Console.WriteLine(p);
-            //Console.ReadLine();
         }
 
         private static bool IsValidEmail(string email)
@@ -181,17 +168,12 @@ namespace ContactList
 
             try
             {
-                // Normalize the domain
                 email = Regex.Replace(email, @"(@)(.+)$", DomainMapper,
                                       RegexOptions.None, TimeSpan.FromMilliseconds(200));
 
-                // Examines the domain part of the email and normalizes it.
                 string DomainMapper(Match match)
                 {
-                    // Use IdnMapping class to convert Unicode domain names.
                     var idn = new IdnMapping();
-
-                    // Pull out and process domain name (throws ArgumentException on invalid)
                     string domainName = idn.GetAscii(match.Groups[2].Value);
 
                     return match.Groups[1].Value + domainName;

@@ -1,20 +1,11 @@
-﻿using CsvHelper;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ContactList
+﻿namespace ContactList
 {
-    public abstract class AddContact 
+    public abstract class AddContact
     {
-       
+
         public virtual string ToCsv()
         {
-            string output = null;
+            string output = "";
 
             var properties = GetType().GetProperties();
 
@@ -26,7 +17,7 @@ namespace ContactList
                     output += ",";
                 }
             }
-            return output;
+            return output.Replace("\"", "");
         }
 
     }
