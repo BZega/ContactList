@@ -1,7 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,8 +13,8 @@ namespace ContactList
         static void Main(string[] args)
         {
 
-            string cont;
-            do
+            bool cont = false;
+            while (cont == false)
             {
                 Console.Clear();
                 Console.WriteLine("Hello, What are you looking to do?");
@@ -24,7 +23,7 @@ namespace ContactList
                 Console.WriteLine("3: Quit");
                 string userInput = Console.ReadLine();
                 if (userInput == "1" || userInput == "Add a contact")
-                {
+                {                    
                     bool nameValidation = false;
                     Console.WriteLine("What is their first name");
                     string name = Console.ReadLine();
@@ -100,16 +99,14 @@ namespace ContactList
                         }
 
                     }
-                    string contact = new Contact(name, lName, bday, email, phone).ToString();
+                    var contact = new Contact(name, lName, bday, email, phone);
                     Console.WriteLine($"{contact} has been added to the file!");
-                    string contactCsv = new Contact(name, lName, bday, email, phone).ToCsv();
                     using var writer = new StreamWriter(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv", true);
                     using var csvWriter = new CsvWriter(writer, CultureInfo.CurrentCulture);
-                    if (!string.IsNullOrWhiteSpace(contactCsv))
-                        csvWriter.NextRecord();                                   
-                    csvWriter.WriteField(contactCsv);
+                    csvWriter.WriteRecord<Contact>(contact);
+                    csvWriter.NextRecord();
                     writer.Flush();
-                    
+
                 }
                 else if (userInput == "2" || userInput == "Look up a contact")
                 {
@@ -118,12 +115,13 @@ namespace ContactList
                     var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                     {
                         HasHeaderRecord = false,
+
                     };
                     using var reader = new StreamReader(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv");
                     using var csvReader = new CsvReader(reader, config);
                     var record = csvReader.GetRecords<Contact>();
                     foreach (Contact items in record)
-                    {                        
+                    {
                         Contact c = new Contact(items.FirstName, items.LastName, items.Birthday, items.Email, items.Phone);
                         c.FirstName = items.FirstName;
                         c.LastName = items.LastName;
@@ -152,13 +150,16 @@ namespace ContactList
                 {
                     Console.WriteLine("Invalid Selection");
                 }
-                
-                Console.WriteLine("Is there anything else you'd like to do? [Yes/No]");
-                cont = Console.ReadLine();
-            } while (cont == "Yes");
 
+                Console.WriteLine("Is there anything else you'd like to do? [Yes/No]");
+                if (Console.ReadLine() != "Yes")
+                {
+                    cont = true;
+                }
+                
+            }
             Console.WriteLine("Thank you! You can close the application with any key.");
-            Console.ReadKey();
+                Console.ReadKey();
         }
 
         private static bool IsValidEmail(string email)
