@@ -24,7 +24,6 @@ namespace ContactList
         [Index(4)]
         public string Phone { get; set; }
         public override string ToString() => $"{FirstName} {LastName}, {Birthday}, Age: {CalculateAge(Convert.ToDateTime(Birthday))}, {Email}, {Phone}";
-        public string ToCsv() => $"{FirstName},{LastName},{Birthday},{Email},{Phone}";
         public static int CalculateAge(DateTime dateOfBirth)
         {
             int age = DateTime.Now.Year - dateOfBirth.Year;

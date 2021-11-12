@@ -23,87 +23,11 @@ namespace ContactList
                 Console.WriteLine("3: Quit");
                 string userInput = Console.ReadLine();
                 if (userInput == "1" || userInput == "Add a contact")
-                {                    
-                    bool nameValidation = false;
-                    Console.WriteLine("What is their first name");
-                    string name = Console.ReadLine();
-                    while (nameValidation == false)
-                    {
-                        if (Regex.IsMatch(name, @"^[a-zA-Z- ]+$"))
-                        {
-                            nameValidation = true;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Sorry, invalid first name entered. Please try again.");
-                            Environment.Exit(0);
-                        }
-                    }
-                    bool lNameValidation = false;
-                    Console.WriteLine("What is their last name?");
-                    string lName = Console.ReadLine();
-                    while (lNameValidation == false)
-                    {
-                        if (Regex.IsMatch(lName, @"^[a-zA-Z- ]+$"))
-                        {
-                            lNameValidation = true;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Sorry, invalid last name entered. Please try again.");
-                            Environment.Exit(0);
-                        }
-                    }
-                    Console.WriteLine("What is their birthday? (XX/XX/XXXX)");
-                    string bday = Console.ReadLine();
-                    var formats = new[] { "MM/dd/yyyy" };
-                    bool validDate = false;
-                    while (validDate == false)
-                    {
-                        if (validDate = DateTime.TryParseExact(bday, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateValue))
-                        {
-                            validDate = true;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Sorry, invalid date entered. Please try again.");
-                            Environment.Exit(0);
-                        }
-                    }
-                    Console.WriteLine("What is their email?");
-                    string email = Console.ReadLine();
-                    bool validEmail = false;
-                    while (validEmail == false)
-                    {
-                        if (IsValidEmail(email) == true)
-                        {
-                            validEmail = true;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Sorry, invalid E-Mail entered. Please try again.");
-                            Environment.Exit(0);
-                        }
-                    }
-                    Console.WriteLine("What is their phone number? (XXX-XXX-XXXX)");
-                    string phone = Console.ReadLine();
-                    bool validPhone = false;
-                    while (validPhone == false)
-                    {
-                        if (Regex.IsMatch(phone, @"\(?\d{3}\)?-? *\d{3}-? *-?\d{4}"))
-                            validPhone = true;
-                        else
-                        {
-                            Console.WriteLine("Sorry, invalid phone number entered. Please try again.");
-                            Environment.Exit(0);
-                        }
-
-                    }
-                    var contact = new Contact(name, lName, bday, email, phone);
-                    Console.WriteLine($"{contact} has been added to the file!");
+                {
+                    Contact contact = AddContact();
                     using var writer = new StreamWriter(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv", true);
                     using var csvWriter = new CsvWriter(writer, CultureInfo.CurrentCulture);
-                    csvWriter.WriteRecord<Contact>(contact);
+                    csvWriter.WriteRecord(contact);
                     csvWriter.NextRecord();
                     writer.Flush();
 
@@ -119,27 +43,7 @@ namespace ContactList
                     };
                     using var reader = new StreamReader(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv");
                     using var csvReader = new CsvReader(reader, config);
-                    var record = csvReader.GetRecords<Contact>();
-                    foreach (Contact items in record)
-                    {
-                        Contact c = new Contact(items.FirstName, items.LastName, items.Birthday, items.Email, items.Phone);
-                        c.FirstName = items.FirstName;
-                        c.LastName = items.LastName;
-                        c.Birthday = items.Birthday;
-                        c.Email = items.Email;
-                        c.Phone = items.Phone;
-                        var line = string.Format($"{items.FirstName} {items.LastName}, {items.Birthday}, Age: {Contact.CalculateAge(Convert.ToDateTime(items.Birthday))}, {items.Email}, {items.Phone}");
-                        bool success = line.Any(contacts => contactInfo.Contains(items.FirstName) || contactInfo.Contains(items.LastName)
-                                        || contactInfo.Contains(items.Birthday) || contactInfo.Contains(items.Email) || contactInfo.Contains(items.Phone));
-
-                        if (success)
-                            Console.WriteLine(line);
-                        else
-                        {
-                            Console.WriteLine("There doesn't appear to be any more matches.");
-                            break;
-                        }
-                    }
+                    LookUpContact(contactInfo, csvReader);
 
                 }
                 else if (userInput == "3" || userInput == "quit")
@@ -156,10 +60,112 @@ namespace ContactList
                 {
                     cont = true;
                 }
-                
+
             }
             Console.WriteLine("Thank you! You can close the application with any key.");
-                Console.ReadKey();
+            Console.ReadKey();
+        }
+
+        private static void LookUpContact(string contactInfo, CsvReader csvReader)
+        {
+            var record = csvReader.GetRecords<Contact>();
+            foreach (Contact items in record)
+            {
+                Contact c = new(items.FirstName, items.LastName, items.Birthday, items.Email, items.Phone);
+                c.FirstName = items.FirstName;
+                c.LastName = items.LastName;
+                c.Birthday = items.Birthday;
+                c.Email = items.Email;
+                c.Phone = items.Phone;
+                var line = string.Format($"{c.FirstName} {c.LastName}, {c.Birthday}, Age: {Contact.CalculateAge(Convert.ToDateTime(c.Birthday))}, {c.Email}, {c.Phone}");
+                bool success = line.Any(contacts => c.FirstName.Contains(contactInfo) || c.LastName.Contains(contactInfo)
+                                || c.Birthday.Contains(contactInfo) || c.Email.Contains(contactInfo) || c.Phone.Contains(contactInfo));
+                if (success)
+                    Console.WriteLine(line);
+            }
+            Console.WriteLine("There was nothing else to find.");
+        }
+
+        private static Contact AddContact()
+        {
+            bool nameValidation = false;
+            Console.WriteLine("What is their first name");
+            string name = Console.ReadLine();
+            while (nameValidation == false)
+            {
+                if (Regex.IsMatch(name, @"^[a-zA-Z- ]+$"))
+                {
+                    nameValidation = true;
+                }
+                else
+                {
+                    Console.WriteLine("Sorry, invalid first name entered. Please try again.");
+                    Environment.Exit(0);
+                }
+            }
+            bool lNameValidation = false;
+            Console.WriteLine("What is their last name?");
+            string lName = Console.ReadLine();
+            while (lNameValidation == false)
+            {
+                if (Regex.IsMatch(lName, @"^[a-zA-Z- ]+$"))
+                {
+                    lNameValidation = true;
+                }
+                else
+                {
+                    Console.WriteLine("Sorry, invalid last name entered. Please try again.");
+                    Environment.Exit(0);
+                }
+            }
+            Console.WriteLine("What is their birthday? (XX/XX/XXXX)");
+            string bday = Console.ReadLine();
+            var formats = new[] { "MM/dd/yyyy" };
+            bool validDate = false;
+            while (validDate == false)
+            {
+                if (validDate = DateTime.TryParseExact(bday, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateValue))
+                {
+                    validDate = true;
+                }
+                else
+                {
+                    Console.WriteLine("Sorry, invalid date entered. Please try again.");
+                    Environment.Exit(0);
+                }
+            }
+            Console.WriteLine("What is their email?");
+            string email = Console.ReadLine();
+            bool validEmail = false;
+            while (validEmail == false)
+            {
+                if (IsValidEmail(email) == true)
+                {
+                    validEmail = true;
+                }
+                else
+                {
+                    Console.WriteLine("Sorry, invalid E-Mail entered. Please try again.");
+                    Environment.Exit(0);
+                }
+            }
+            Console.WriteLine("What is their phone number? (XXX-XXX-XXXX)");
+            string phone = Console.ReadLine();
+            bool validPhone = false;
+            while (validPhone == false)
+            {
+                if (Regex.IsMatch(phone, @"\(?\d{3}\)?-? *\d{3}-? *-?\d{4}"))
+                    validPhone = true;
+                else
+                {
+                    Console.WriteLine("Sorry, invalid phone number entered. Please try again.");
+                    Environment.Exit(0);
+                }
+
+            }
+            var contact = new Contact(name, lName, bday, email, phone);
+            Console.WriteLine($"{contact} has been added to the file!");
+            return contact;
         }
 
         private static bool IsValidEmail(string email)
