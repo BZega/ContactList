@@ -13,9 +13,10 @@ namespace ContactList
         static void Main(string[] args)
         {
 
-            bool cont = false;
-            while (cont == false)
+            bool cont = true;
+            while (cont == true)
             {
+
                 Console.Clear();
                 Console.WriteLine("Hello, What are you looking to do?");
                 Console.WriteLine("1: Add a contact");
@@ -57,15 +58,11 @@ namespace ContactList
 
                 Console.WriteLine("Is there anything else you'd like to do? [Yes/No]");
                 if (Console.ReadLine() != "Yes")
-                {
-                    cont = true;
-                }
-
+                    cont = false;          
             }
             Console.WriteLine("Thank you! You can close the application with any key.");
             Console.ReadKey();
         }
-
         private static void LookUpContact(string contactInfo, CsvReader csvReader)
         {
             var record = csvReader.GetRecords<Contact>();
@@ -85,10 +82,15 @@ namespace ContactList
             }
             Console.WriteLine("There was nothing else to find.");
         }
-
         private static Contact AddContact()
         {
             bool nameValidation = false;
+            bool lNameValidation = false;
+            bool validDate = false;
+            bool validEmail = false;
+            bool validPhone = false;
+            var formats = new[] { "MM/dd/yyyy" };
+            TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
             Console.WriteLine("What is their first name");
             string name = Console.ReadLine();
             while (nameValidation == false)
@@ -102,8 +104,7 @@ namespace ContactList
                     Console.WriteLine("Sorry, invalid first name entered. Please try again.");
                     Environment.Exit(0);
                 }
-            }
-            bool lNameValidation = false;
+            }           
             Console.WriteLine("What is their last name?");
             string lName = Console.ReadLine();
             while (lNameValidation == false)
@@ -119,9 +120,7 @@ namespace ContactList
                 }
             }
             Console.WriteLine("What is their birthday? (XX/XX/XXXX)");
-            string bday = Console.ReadLine();
-            var formats = new[] { "MM/dd/yyyy" };
-            bool validDate = false;
+            string bday = Console.ReadLine();                       
             while (validDate == false)
             {
                 if (validDate = DateTime.TryParseExact(bday, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateValue))
@@ -135,8 +134,7 @@ namespace ContactList
                 }
             }
             Console.WriteLine("What is their email?");
-            string email = Console.ReadLine();
-            bool validEmail = false;
+            string email = Console.ReadLine();            
             while (validEmail == false)
             {
                 if (IsValidEmail(email) == true)
@@ -150,8 +148,7 @@ namespace ContactList
                 }
             }
             Console.WriteLine("What is their phone number? (XXX-XXX-XXXX)");
-            string phone = Console.ReadLine();
-            bool validPhone = false;
+            string phone = Console.ReadLine();            
             while (validPhone == false)
             {
                 if (Regex.IsMatch(phone, @"\(?\d{3}\)?-? *\d{3}-? *-?\d{4}"))
@@ -163,11 +160,10 @@ namespace ContactList
                 }
 
             }
-            var contact = new Contact(name, lName, bday, email, phone);
+            var contact = new Contact(myTI.ToTitleCase(name), myTI.ToTitleCase(lName), bday, email, phone);
             Console.WriteLine($"{contact} has been added to the file!");
             return contact;
         }
-
         private static bool IsValidEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
