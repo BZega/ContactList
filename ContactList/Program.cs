@@ -26,7 +26,7 @@ namespace ContactList
                 if (userInput == "1" || userInput == "Add a contact")
                 {
                     Contact contact = AddContact();
-                    using var writer = new StreamWriter(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv", true);
+                    using var writer = new StreamWriter("ContactInfo.csv", true);
                     using var csvWriter = new CsvWriter(writer, CultureInfo.CurrentCulture);
                     csvWriter.WriteRecord(contact);
                     csvWriter.NextRecord();
@@ -42,7 +42,7 @@ namespace ContactList
                         HasHeaderRecord = false,
 
                     };
-                    using var reader = new StreamReader(@"C:\Users\bzega\source\repos\ContactList\ContactList\ContactInfo.csv");
+                    using var reader = new StreamReader("ContactInfo.csv");
                     using var csvReader = new CsvReader(reader, config);
                     LookUpContact(contactInfo, csvReader);
 
